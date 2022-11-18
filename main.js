@@ -51,8 +51,10 @@ app.on('ready', () =>{
     let musicPath = await sqlite.selectTable(db, 'LocationMusicList', ['id'], [id]);
     event.returnValue = musicPath
   })
-  ipcMain.on('deleteId', (event, id)=>{
+  ipcMain.on('deleteId', async (event, id)=>{
     sqlite.deleteTable(db, 'LocationMusicList', ['id'], [id])
+    let musicPath = await sqlite.selectAllTable(db, 'LocationMusicList')
+    event.returnValue = musicPath
   })
   ipcMain.on('open-music-file', (event, arg)=>{
     dialog.showOpenDialog({
@@ -77,8 +79,5 @@ app.on('ready', () =>{
         sqlite.insertTable(db, 'LocationMusicList', ['id', 'MusicName', 'MusicPath', 'InsertTime'], [id, musicName, musicPath, insertTime])
       }
     })
-    // let musicList = null
-    // musicList = await sqlite.selectAllTable(db, 'LocationMusicList')
-    // console.log(musicList)
   })
 })

@@ -15,7 +15,6 @@ const renderListHTML =  (List) =>{
         </li>`
         return html
     }, '')
-    console.log(List.length)
     musicList.innerHTML= List.length > 0 ? `<ul class="list-group">${musicItemsHTML}</ul>`: `<div>请添加音乐</div>`
 }
 ipcRenderer.on('getData', (event, allData)=>{
@@ -36,11 +35,12 @@ $("#musicList").addEventListener('click', (event)=>{
     let {dataset, classList} = event.target;
     let id = dataset && dataset.id;
     if(id && classList.contains('icon-bofang')){
-        console.log(musicAudio)
         if(musicEvent && musicEvent['id'] == id){
+            // 判断是否是暂停后重新播放
             musicAudio.play();
             classList.replace('icon-bofang', 'icon-bofangzanting');
         }else{
+            // 更换音乐重新播放，重新获取数据
             musicEvent = ipcRenderer.sendSync('playId', id)
             musicAudio.src = musicEvent['MusicPath'];
             musicAudio.play();
@@ -50,40 +50,54 @@ $("#musicList").addEventListener('click', (event)=>{
             classList.replace('icon-bofang', 'icon-bofangzanting');
         }
     }else if(id && classList.contains('icon-bofangzanting')){
+        // 点击暂停
         musicAudio.pause()
         classList.replace('icon-bofangzanting', 'icon-bofang');
     }else if(id && classList.contains('icon-lajitong')){
-        ipcRenderer.send('deleteId', id)
+        // 点击删除  删除后刷新状态
+        musicAudio.pause()
+        classList.replace('icon-bofangzanting', 'icon-bofang');
+        renderPlayerHTML(0, 0, 'delete')
+        updateProgressHTML(0, 0, 'delete')
+        let allData = ipcRenderer.sendSync('deleteId', id);
+        renderListHTML(allData);
     }
 })
-let renderPlayerHTML = (name, duration) => {
+let renderPlayerHTML = (name, duration, status) => {
     let player = $('#player-status');
-    let html = `
-                <div class="col font-weight-bold">
-                    正在播放:${name}
-                </div>
-                <div class="col">
-                    <span id="current-seeker">00:00</span> / <span>${convertDuration(duration)}</span>
-                </div>
-    `
-    player.innerHTML = html;
+    if(status == 'play'){
+        let html = `
+            <div class="col font-weight-bold">
+                正在播放:${name.split('.')[0]}
+            </div>
+            <div class="col">
+                <span id="current-seeker">00:00</span> / <span>${convertDuration(duration)}</span>
+            </div>
+        `
+        player.innerHTML = html;
+    }else if(status == 'delete'){
+        player.innerHTML = ''
+    }
 }
-let updateProgressHTML = (currentTime, duration)=>{
+let updateProgressHTML = (currentTime, duration, status)=>{
     let seeker = $('#current-seeker');
     let playerBar = $('#player-bar')
-    seeker.innerHTML = convertDuration(currentTime)
-    let barWidth = currentTime / duration * 100
-    playerBar.style.width = barWidth +'%';
-    playerBar.innerText = Math.floor(barWidth) > 10 ? Math.floor(barWidth) + '%': "0" + Math.floor(barWidth) + '%';
-    if(currentTime == duration){
-        $('.icon-bofangzanting').classList.replace('icon-bofangzanting', 'icon-bofang');
+    if(status == 'play'){
+        seeker.innerHTML = convertDuration(currentTime)
+        let barWidth = currentTime / duration * 100
+        playerBar.style.width = barWidth +'%';
+        if(currentTime == duration){
+            $('.icon-bofangzanting').classList.replace('icon-bofangzanting', 'icon-bofang');
+        }
+    }else if(status == 'delete'){
+        playerBar.style.width = '0%';
     }
 }
 musicAudio.addEventListener('loadedmetadata', ()=>{
     // 渲染播放器状态
-    renderPlayerHTML(musicEvent['MusicName'], musicAudio.duration)
+    renderPlayerHTML(musicEvent['MusicName'], musicAudio.duration, 'play')
 })
 musicAudio.addEventListener('timeupdate', (event)=>{
     // 更新播放器状态
-    updateProgressHTML(musicAudio.currentTime, musicAudio.duration)
+    updateProgressHTML(musicAudio.currentTime, musicAudio.duration, 'play')
 })
