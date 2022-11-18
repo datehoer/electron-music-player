@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <!-- https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'sha256-A4Ul+SeZu4Emphk59oUQaExXFhdMy3mmyVYFu5cT7WM='; style-src 'self' 'unsafe-inline'"
+    />
+    <link href="./styles.css" rel="stylesheet" />
+    <title>添加音乐</title>
+    <link
+      rel="stylesheet"
+      href="./node_modules/bootstrap/dist/css/bootstrap.min.css"
+    />
+  </head>
+  <body>
+    <div class="container mt-4">
+      <h1>添加音乐</h1>
+      <div id="musicList" class="mb-2">
+        未选择文件
+      </div>
+        <div class="d-grid gap-2 col-6 mx-auto">
+          <button class="btn btn-primary" id="select-music" type="button">选择音乐</button>
+          <button class="btn btn-outline-primary" id="load-music" type="button">导入音乐</button>
+        </div>
+    </div>
+
+    <script>
+        require('./add.js')
+      </script>
+  </body>
+</html>
